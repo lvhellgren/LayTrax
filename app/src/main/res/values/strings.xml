@@ -1,4 +1,15 @@
 <resources>
     <string name="app_name">LayTrax</string>
     <string name="field_email">Email</string>
+    <string-array name="intervals_array">
+        <item>5</item>
+        <item>30</item>
+        <item>60</item>
+        <item>300</item>
+        <item>600</item>
+        <item>1800</item>
+        <item>3600</item>
+    </string-array>
+    <string name="firebase_path" translatable="false">locations</string>
 </resources>
+
