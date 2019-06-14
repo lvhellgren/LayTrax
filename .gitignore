@@ -1,5 +1,11 @@
 # Ignore Gradle project-specific cache directory
 .gradle
+.iml
 
 # Ignore Gradle build output directory
 build
+
+local.properties
+settings.gradle
+LayTrax.iml
+app.iml
