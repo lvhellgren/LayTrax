@@ -20,7 +20,7 @@
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:paddingTop="24dp"
-                android:text="Service Status"
+                android:text="Initializing"
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:textColor="@color/colorPrimaryDark">
 

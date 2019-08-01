@@ -88,7 +88,7 @@ class ServiceRequestFragment : Fragment(), View.OnClickListener {
         intent.data = Uri.parse("mailto:") // only email apps should handle this
         intent.putExtra(Intent.EXTRA_EMAIL, arrayOf(email))
         intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.request_email_subject))
-        intent.putExtra(Intent.EXTRA_TEXT, "${getString(R.string.request_email_text)} ${deviceId}")
+        intent.putExtra(Intent.EXTRA_TEXT, "${getString(R.string.request_email_text)} $deviceId")
         if (intent.resolveActivity(activity!!.packageManager) != null) {
             startActivity(intent)
         }

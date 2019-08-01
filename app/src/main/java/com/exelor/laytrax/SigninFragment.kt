@@ -126,7 +126,7 @@ class SigninFragment : Fragment(), View.OnClickListener {
                     dialog.dismiss()
                 }
         } catch (e: Exception) {
-            Log.e(TAG, "Sign In error: ${e.toString()}")
+            Log.e(TAG, "Sign In error: $e")
             dialog.dismiss()
         }
 

@@ -50,13 +50,16 @@ class LocationWorker(
     private val TAG = "LocationWorker"
     private var repeat = false
     private var stopped = false
+    private var ignoreSpacingThreshold = false;
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val prefs = applicationContext.getSharedPreferences(MainActivity.SHARED_PREFS_NAME, 0)
 
     override fun doWork(): Result {
         Log.d(TAG, "Starting")
-
         try {
+            // To support a repeat interval less than 600 seconds (there is a 10 minute worker duration limit),
+            // the worker starts a new worker instance to handle the next interval. WorkManager can automatically
+            // handle repeat intervals of 15 minutes or more.
             repeat = prefs.getString(MainActivity.INTERVAL_UNIT, "") == MainActivity.SECONDS
 
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
@@ -88,8 +91,6 @@ class LocationWorker(
 
     private fun startWorker() {
         val constraints = Constraints.Builder()
-            .setRequiresBatteryNotLow(true)
-            .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
         val workRequest = OneTimeWorkRequest.Builder(LocationWorker::class.java)
@@ -97,6 +98,10 @@ class LocationWorker(
             .addTag(MainActivity.TRACKING_WORKER)
             .build()
 
+        // Remove completed worker entries from the database
+        WorkManager.getInstance(context).pruneWork()
+
+        // Submit the new request
         WorkManager.getInstance(context).enqueue(workRequest)
     }
 
@@ -110,28 +115,32 @@ class LocationWorker(
         ) {
             fusedLocationClient.lastLocation
                 .addOnSuccessListener { location: Location? ->
-                    val results = FloatArray(1)
+                    if (location != null) {
+                        val results = FloatArray(1)
 
-                    val lastLatitude = prefs.getDouble(LAST_LATITUDE, 0.0)
-                    val lastLongitude = prefs.getDouble(LAST_LONGITUDE, 0.0)
+                        val lastLatitude = prefs.getDouble(LAST_LATITUDE, 0.0)
+                        val lastLongitude = prefs.getDouble(LAST_LONGITUDE, 0.0)
 
-                    Location.distanceBetween(
-                        lastLatitude,
-                        lastLongitude,
-                        location!!.latitude,
-                        location.longitude,
-                        results
-                    )
+                        Location.distanceBetween(
+                            lastLatitude,
+                            lastLongitude,
+                            location!!.latitude,
+                            location.longitude,
+                            results
+                        )
 
-                    val spacing = results.get(0)
-                    val spacingThreshold = prefs.getLong(MainActivity.SPACING, MainActivity.SPACING_DEFAULT)
-                    if (results.get(0) >= spacingThreshold) {
-                        updateDb(location, spacing)
+                        val spacing = results[0]
+                        val spacingThreshold = prefs.getLong(MainActivity.SPACING, MainActivity.SPACING_DEFAULT)
+                        if (results[0] >= spacingThreshold || ignoreSpacingThreshold) {
+                            updateDb(location, spacing)
 
-                        val editor = prefs.edit()
-                        editor.putDouble(LAST_LATITUDE, location.latitude)
-                        editor.putDouble(LAST_LONGITUDE, location.longitude)
-                        editor.apply()
+                            val editor = prefs.edit()
+                            editor.putDouble(LAST_LATITUDE, location.latitude)
+                            editor.putDouble(LAST_LONGITUDE, location.longitude)
+                            editor.apply()
+                        }
+                    } else {
+                        Log.e(TAG, "Did not get lastLocation")
                     }
                 }
         }
@@ -147,24 +156,37 @@ class LocationWorker(
 
             val locationEntity = location.toLocationEntity()
 
-            locationEntity.unitId = Settings.Secure.getString(
+            locationEntity.deviceId = Settings.Secure.getString(
                 applicationContext.contentResolver,
                 Settings.Secure.ANDROID_ID
             )
             locationEntity.account = prefs.getString(MainActivity.ACCOUNT_ID, "")
             locationEntity.email = prefs.getString(MainActivity.EMAIL, "")
-            locationEntity.distanceMoved = spacing.toLong()
+            locationEntity.stepLength = spacing.toLong()
+            locationEntity.hasAccuracy = location.hasAccuracy();
+            locationEntity.hasAltitude = location.hasAltitude();
+            locationEntity.hasBearing = location.hasBearing();
+            locationEntity.hasSpeed = location.hasSpeed();
 
             val addresses = geocoder.getFromLocation(locationEntity.latitude, locationEntity.longitude, 1)
             if (addresses.size > 0) {
-                val address: Address = addresses.get(0)
+                val address: Address = addresses[0]
                 locationEntity.address = address.toLocationAddress()
             }
 
+            val id = db.collection(MainActivity.COLLECTION_NAME)
+                .document()
+                .id;
+            locationEntity.documentId = id
+
             db.collection(MainActivity.COLLECTION_NAME)
-                .add(locationEntity)
-                .addOnSuccessListener { Log.d(TAG,
-                    "Successful write to location collection")
+                .document(id)
+                .set(locationEntity)
+                .addOnSuccessListener {
+                    Log.d(
+                        TAG,
+                        "Successful write to location collection"
+                    )
                 }
                 .addOnFailureListener { e ->
                     Log.e(TAG, e.toString())
@@ -181,9 +203,9 @@ class LocationWorker(
         latitude = latitude,
         longitude = longitude,
         altitude = altitude,
+        bearing = bearing,
         accuracy = accuracy,
         speed = speed,
-        bearing = bearing,
         timestamp = time,
         datetime = Date(time).toString()
     )
@@ -192,22 +214,24 @@ class LocationWorker(
      * Extension function for object mapping
      */
     private fun Address.toLocationAddress() = LocationAddress(
-        street = subThoroughfare,
+        subThoroughfare = subThoroughfare,
+        thoroughfare = thoroughfare,
         locality = locality,
+        subAdminArea = subAdminArea,
         area = adminArea,
         postalCode = postalCode,
-        country = countryName
+        countryName = countryName
     )
 
     /**
      * Extension function used for storing double values in preferences
      */
-    fun SharedPreferences.Editor.putDouble(key: String, double: Double) =
+    private fun SharedPreferences.Editor.putDouble(key: String, double: Double) =
         putLong(key, java.lang.Double.doubleToRawLongBits(double))
 
     /**
      * Extension function used for obtaining double values from preferences
      */
-    fun SharedPreferences.getDouble(key: String, default: Double) =
+    private fun SharedPreferences.getDouble(key: String, default: Double) =
         java.lang.Double.longBitsToDouble(getLong(key, java.lang.Double.doubleToRawLongBits(default)))
 }

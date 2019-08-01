@@ -50,6 +50,8 @@ class MainActivity : AppCompatActivity() {
 
         if (findViewById<View>(R.id.fragment_container) != null) {
             selectPage()
+        } else {
+            this.headerText!!.text = getText(R.string.err_no_container)
         }
     }
 
@@ -57,20 +59,18 @@ class MainActivity : AppCompatActivity() {
      * If tracking is in progress, navigate to the run page, otherwise, the sign-in page.
      */
     private fun selectPage() {
-
-        liveData = WorkManager.getInstance(applicationContext)
-            .getWorkInfosByTagLiveData(TRACKING_WORKER)
-        liveData!!.observe(this, Observer { workInfos: List<WorkInfo> ->
-            if (workInfos.isEmpty()) {
-                if (FirebaseAuth.getInstance()?.currentUser?.email != null) {
-                    showStartPage()
+        WorkManager.getInstance(applicationContext)
+            .getWorkInfosByTagLiveData(TRACKING_WORKER)!!.observe(this, Observer { workInfos: List<WorkInfo> ->
+                if (workInfos.isEmpty()) {
+                    if (FirebaseAuth.getInstance()?.currentUser?.email != null) {
+                        showStartPage()
+                    } else {
+                        showSigninPage()
+                    }
                 } else {
-                    showSigninPage()
+                    showRunPage()
                 }
-            } else {
-                showRunPage()
-            }
-        })
+            })
     }
 
     private fun showSigninPage() {
@@ -106,7 +106,7 @@ class MainActivity : AppCompatActivity() {
         const val INTERVAL = "interval"
         const val INTERVAL_SECONDS_DEFAULT = 5L
         const val INTERVAL_SECONDS_MIN = 2L
-        const val INTERVAL_SECONDS_MAX = 60 * 12L
+        const val INTERVAL_SECONDS_MAX = 60 * 9L
         const val INTERVAL_MINUTES_DEFAULT = 15L
         const val INTERVAL_MINUTES_MIN = 15L
         const val INTERVAL_MINUTES_MAX = 60 * 24L
@@ -119,6 +119,6 @@ class MainActivity : AppCompatActivity() {
         const val SECONDS = "Seconds"
         const val MINUTES = "Minutes"
 
-        const val COLLECTION_NAME = "tracks"
+        const val COLLECTION_NAME = "steps"
     }
 }

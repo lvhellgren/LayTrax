@@ -25,7 +25,6 @@ package com.exelor.laytrax
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -52,15 +51,26 @@ class RunFragment : Fragment(), View.OnClickListener {
         // Display current settings
         val prefs = context!!.getSharedPreferences(MainActivity.SHARED_PREFS_NAME, 0)
         (view.findViewById<View>(R.id.user_value) as TextView)
-            .text = getString(R.string.user_label) + ": " + prefs.getString(MainActivity.EMAIL, "")
+            .text = getString(
+            R.string.current_user, getString(R.string.email_label),
+            prefs.getString(MainActivity.EMAIL, "")
+        )
         (view.findViewById<View>(R.id.account_value) as TextView)
-            .text = getString(R.string.account_label) + ": " + prefs.getString(MainActivity.ACCOUNT_ID, "")
+            .text = getString(
+            R.string.current_account, getString(R.string.account_label),
+            prefs.getString(MainActivity.ACCOUNT_ID, "")
+        )
         (view.findViewById<View>(R.id.spacing_value) as TextView)
-            .text = getString(R.string.spacing_label) + ": " + prefs.getLong(MainActivity.SPACING, 0)
+            .text = getString(
+            R.string.current_spacing, getString(R.string.spacing_label_2),
+            prefs.getLong(MainActivity.SPACING, 0)
+        )
         (view.findViewById<View>(R.id.interval_value) as TextView)
-            .text = getString(R.string.interval_label) + ": " + prefs.getLong(MainActivity.INTERVAL, 0)
-        (view.findViewById<View>(R.id.interval_unit_value) as TextView)
-            .text = getString(R.string.interval_unit_label) + ": " + prefs.getString(MainActivity.INTERVAL_UNIT, "")
+            .text = getString(
+            R.string.current_interval, getString(R.string.interval_label),
+            prefs.getLong(MainActivity.INTERVAL, 0),
+            prefs.getString(MainActivity.INTERVAL_UNIT, "")?.toLowerCase()
+        )
 
         // Stop button
         val button = view!!.findViewById<View>(R.id.stop_button) as Button
@@ -98,17 +108,5 @@ class RunFragment : Fragment(), View.OnClickListener {
         val intent = Intent(activity, MainActivity::class.java)
         activity!!.startActivity(intent)
         activity.finish()
-    }
-
-    private fun savePreferences(data: Data) {
-        val pref = activity!!
-            .applicationContext
-            .getSharedPreferences(MainActivity.SHARED_PREFS_NAME, 0)
-        val editor = pref.edit()
-
-        editor.putString(MainActivity.INTERVAL, data.getString(MainActivity.INTERVAL))
-        editor.putString(MainActivity.SPACING, data.getString(MainActivity.SPACING))
-
-        editor.commit()
     }
 }

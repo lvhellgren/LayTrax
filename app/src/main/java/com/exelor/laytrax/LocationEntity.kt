@@ -5,16 +5,20 @@ data class LocationEntity(
     var latitude: Double,
     var longitude: Double,
     var altitude: Double?,
+    var bearing: Float?,
     var accuracy: Float?,
     var speed: Float?,
-    var bearing: Float?,
     var timestamp: Long?,
     var datetime: String?
-
 ) {
-    var unitId: String? = null
+    var documentId: String = ""
+    var deviceId: String? = null
     var account: String? = null
     var email: String? = null
     var address: LocationAddress? = null
-    var distanceMoved: Long? = 0
+    var stepLength: Long? = 0
+    var hasAccuracy: Boolean = false
+    var hasAltitude: Boolean = false
+    var hasBearing: Boolean = false
+    var hasSpeed: Boolean = false
 }

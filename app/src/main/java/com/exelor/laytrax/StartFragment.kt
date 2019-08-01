@@ -60,16 +60,16 @@ class StartFragment : Fragment() {
             .text = prefs.getString(MainActivity.EMAIL, "")
 
         // Account
-        var accountId = prefs.getString(MainActivity.ACCOUNT_ID, "")
+        val accountId = prefs.getString(MainActivity.ACCOUNT_ID, "")
         (startView.findViewById<View>(R.id.account_id_field) as TextView).text = accountId
 
         // Time interval
-        var interval = prefs.getLong(MainActivity.INTERVAL, defaultIntervalValue)
+        val interval = prefs.getLong(MainActivity.INTERVAL, defaultIntervalValue)
         (startView.findViewById<View>(R.id.interval_field) as TextView).text = interval.toString()
 
-        // Footprint spacing
-        var spacing = prefs.getLong(MainActivity.SPACING, MainActivity.SPACING_DEFAULT)
-        var spacingField = startView.findViewById<View>(R.id.spacing_field)
+        // Step spacing
+        val spacing = prefs.getLong(MainActivity.SPACING, MainActivity.SPACING_DEFAULT)
+        val spacingField = startView.findViewById<View>(R.id.spacing_field)
         (spacingField as TextView).text = spacing.toString()
 
         // Time unit radio button
@@ -79,16 +79,16 @@ class StartFragment : Fragment() {
         val checked = this.startView.findViewById<View>(id) as RadioButton
         radioGroup.check(checked.id)
 
-        // Create footprint spacing value change listener
+        // Create step spacing value change listener
         spacingField.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(editable: Editable?) {
-                var s = editable.toString()
+                val s = editable.toString()
                 if (s.isNotEmpty()) {
-                    var value = s.toLong()
+                    val value = s.toLong()
                     if (value >= MainActivity.SPACING_MIN) {
                         val editor = prefs.edit()
-                        editor.putLong(MainActivity.SPACING, value.toLong())
-                        editor.commit()
+                        editor.putLong(MainActivity.SPACING, value)
+                        editor.apply()
                     } else {
                         Toast.makeText(
                             activity, getString(R.string.spacing_too_small)
@@ -184,7 +184,7 @@ class StartFragment : Fragment() {
         editor.putString(MainActivity.INTERVAL_UNIT, timeUnit)
         editor.putLong(MainActivity.INTERVAL, interval)
         editor.putString(MainActivity.ACCOUNT_ID, accountId)
-        editor.commit()
+        editor.apply()
 
         return true
     }
@@ -204,7 +204,7 @@ class StartFragment : Fragment() {
                 interval = MainActivity.INTERVAL_MINUTES_DEFAULT
             }
 
-            var intervalField = startView.findViewById<View>(R.id.interval_field)
+            val intervalField = startView.findViewById<View>(R.id.interval_field)
             (intervalField as TextView).text = interval.toString()
 
             val preferences = activity!!
@@ -212,17 +212,15 @@ class StartFragment : Fragment() {
                 .getSharedPreferences(MainActivity.SHARED_PREFS_NAME, 0)
             val editor = preferences.edit()
             editor.putString(MainActivity.INTERVAL_UNIT, unit)
-            editor.commit()
+            editor.apply()
         }
     }
 
     private fun startWorker() {
         val prefs = context!!.getSharedPreferences(MainActivity.SHARED_PREFS_NAME, 0)
-        var timeUnit = prefs.getString(MainActivity.INTERVAL_UNIT, MainActivity.MINUTES)
+        val timeUnit = prefs.getString(MainActivity.INTERVAL_UNIT, MainActivity.MINUTES)
 
         val constraints = Constraints.Builder()
-            .setRequiresBatteryNotLow(true)
-            .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
         val workRequest: WorkRequest
