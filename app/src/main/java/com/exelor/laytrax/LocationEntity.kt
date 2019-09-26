@@ -17,6 +17,8 @@ data class LocationEntity(
     var email: String? = null
     var address: LocationAddress? = null
     var stepLength: Long? = 0
+    var bearingForward: Float? = null
+    var previousBearing: Float? = 0.0F
     var hasAccuracy: Boolean = false
     var hasAltitude: Boolean = false
     var hasBearing: Boolean = false

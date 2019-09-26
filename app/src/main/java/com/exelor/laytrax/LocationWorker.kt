@@ -132,7 +132,16 @@ class LocationWorker(
                         val spacing = results[0]
                         val spacingThreshold = prefs.getLong(MainActivity.SPACING, MainActivity.SPACING_DEFAULT)
                         if (results[0] >= spacingThreshold || ignoreSpacingThreshold) {
-                            updateDb(location, spacing)
+
+                            var previousBearing = 0.0F;
+                            if (lastLatitude + lastLongitude != 0.0) {
+                                val lastLocation = Location("");
+                                lastLocation.setLatitude(lastLatitude);
+                                lastLocation.setLongitude(lastLongitude);
+                                previousBearing = lastLocation.bearingTo(location);
+                            }
+
+                            updateDb(location, spacing, previousBearing)
 
                             val editor = prefs.edit()
                             editor.putDouble(LAST_LATITUDE, location.latitude)
@@ -149,7 +158,7 @@ class LocationWorker(
     /**
      * Sends location data to Firestore DB
      */
-    private fun updateDb(location: Location?, spacing: Float) {
+    private fun updateDb(location: Location?, spacing: Float, previousBearing: Float) {
         if (location !== null) {
             val db = FirebaseFirestore.getInstance()
             val geocoder = Geocoder(context, Locale.getDefault())
@@ -163,6 +172,7 @@ class LocationWorker(
             locationEntity.account = prefs.getString(MainActivity.ACCOUNT_ID, "")
             locationEntity.email = prefs.getString(MainActivity.EMAIL, "")
             locationEntity.stepLength = spacing.toLong()
+            locationEntity.previousBearing = previousBearing
             locationEntity.hasAccuracy = location.hasAccuracy();
             locationEntity.hasAltitude = location.hasAltitude();
             locationEntity.hasBearing = location.hasBearing();

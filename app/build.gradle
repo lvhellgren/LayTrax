@@ -5,6 +5,7 @@ apply plugin: 'kotlin-android'
 android {
     compileSdkVersion 28
     defaultConfig {
+
         applicationId "com.exelor.laytrax"
         minSdkVersion 23
         targetSdkVersion 28
