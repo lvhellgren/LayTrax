@@ -119,6 +119,6 @@ class MainActivity : AppCompatActivity() {
         const val SECONDS = "Seconds"
         const val MINUTES = "Minutes"
 
-        const val COLLECTION_NAME = "steps"
+        const val COLLECTION_NAME = "device-events"
     }
 }

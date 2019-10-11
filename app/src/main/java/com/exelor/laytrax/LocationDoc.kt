@@ -1,7 +1,7 @@
 package com.exelor.laytrax
 
 
-data class LocationEntity(
+data class LocationDoc(
     var latitude: Double,
     var longitude: Double,
     var altitude: Double?,
@@ -11,6 +11,7 @@ data class LocationEntity(
     var timestamp: Long?,
     var datetime: String?
 ) {
+    var eventType = "MOVE"
     var documentId: String = ""
     var deviceId: String? = null
     var account: String? = null

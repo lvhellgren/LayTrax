@@ -34,6 +34,7 @@ import android.provider.Settings
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.work.*
+import com.exelor.laytrax.MainActivity.Companion.COLLECTION_NAME
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.firestore.FirebaseFirestore
@@ -41,6 +42,35 @@ import java.util.*
 
 const val LAST_LATITUDE = "lastLatitude"
 const val LAST_LONGITUDE = "lastLongitude"
+
+/** <test-data>
+ *
+ * For use with the emulator */
+
+
+const val useTestData = false
+const val ignoreSpacingThreshold = false;
+
+val COORDS = arrayOf(
+    doubleArrayOf(33.634221774746806, -117.87835762491568),
+    doubleArrayOf(33.63069369602855, -117.88553852388304),
+    doubleArrayOf(33.65813818374289, -117.91751178161758),
+    doubleArrayOf(33.703409061422626, -117.93241745295722),
+    doubleArrayOf(33.63459185798198, -117.88492469561425)
+)
+
+const val BIG_CANYON = 1
+const val CdMHS = 0
+const val COSTCO = 3
+const val HOME = 4
+const val HOME_DEPOT = 2
+
+const val LOC = HOME
+
+const val LAT = 0
+const val LON = 1
+
+/** </test-data> */
 
 class LocationWorker(
     private val context: Context,
@@ -50,7 +80,6 @@ class LocationWorker(
     private val TAG = "LocationWorker"
     private var repeat = false
     private var stopped = false
-    private var ignoreSpacingThreshold = false;
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val prefs = applicationContext.getSharedPreferences(MainActivity.SHARED_PREFS_NAME, 0)
 
@@ -117,6 +146,12 @@ class LocationWorker(
                 .addOnSuccessListener { location: Location? ->
                     if (location != null) {
                         val results = FloatArray(1)
+                        Log.d(TAG, "Got location")
+
+                        if (useTestData) {
+                            location.latitude = COORDS[LOC][LAT]
+                            location.longitude = COORDS[LOC][LON]
+                        }
 
                         val lastLatitude = prefs.getDouble(LAST_LATITUDE, 0.0)
                         val lastLongitude = prefs.getDouble(LAST_LONGITUDE, 0.0)
@@ -163,39 +198,39 @@ class LocationWorker(
             val db = FirebaseFirestore.getInstance()
             val geocoder = Geocoder(context, Locale.getDefault())
 
-            val locationEntity = location.toLocationEntity()
+            val locationDoc = location.locationDoc()
 
-            locationEntity.deviceId = Settings.Secure.getString(
+            locationDoc.deviceId = Settings.Secure.getString(
                 applicationContext.contentResolver,
                 Settings.Secure.ANDROID_ID
             )
-            locationEntity.account = prefs.getString(MainActivity.ACCOUNT_ID, "")
-            locationEntity.email = prefs.getString(MainActivity.EMAIL, "")
-            locationEntity.stepLength = spacing.toLong()
-            locationEntity.previousBearing = previousBearing
-            locationEntity.hasAccuracy = location.hasAccuracy();
-            locationEntity.hasAltitude = location.hasAltitude();
-            locationEntity.hasBearing = location.hasBearing();
-            locationEntity.hasSpeed = location.hasSpeed();
+            locationDoc.account = prefs.getString(MainActivity.ACCOUNT_ID, "")
+            locationDoc.email = prefs.getString(MainActivity.EMAIL, "")
+            locationDoc.stepLength = spacing.toLong()
+            locationDoc.previousBearing = previousBearing
+            locationDoc.hasAccuracy = location.hasAccuracy();
+            locationDoc.hasAltitude = location.hasAltitude();
+            locationDoc.hasBearing = location.hasBearing();
+            locationDoc.hasSpeed = location.hasSpeed();
 
-            val addresses = geocoder.getFromLocation(locationEntity.latitude, locationEntity.longitude, 1)
+            val addresses = geocoder.getFromLocation(locationDoc.latitude, locationDoc.longitude, 1)
             if (addresses.size > 0) {
                 val address: Address = addresses[0]
-                locationEntity.address = address.toLocationAddress()
+                locationDoc.address = address.toLocationAddress()
             }
 
             val id = db.collection(MainActivity.COLLECTION_NAME)
                 .document()
                 .id;
-            locationEntity.documentId = id
+            locationDoc.documentId = id
 
             db.collection(MainActivity.COLLECTION_NAME)
                 .document(id)
-                .set(locationEntity)
+                .set(locationDoc)
                 .addOnSuccessListener {
                     Log.d(
                         TAG,
-                        "Successful write to location collection"
+                        "Successful write to $COLLECTION_NAME collection"
                     )
                 }
                 .addOnFailureListener { e ->
@@ -209,7 +244,7 @@ class LocationWorker(
     /**
      * Extension function for object mapping
      */
-    private fun Location.toLocationEntity() = LocationEntity(
+    private fun Location.locationDoc() = LocationDoc(
         latitude = latitude,
         longitude = longitude,
         altitude = altitude,
