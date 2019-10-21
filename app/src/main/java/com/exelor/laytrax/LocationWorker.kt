@@ -37,6 +37,7 @@ import androidx.work.*
 import com.exelor.laytrax.MainActivity.Companion.COLLECTION_NAME
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.*
 
@@ -65,7 +66,7 @@ const val COSTCO = 3
 const val HOME = 4
 const val HOME_DEPOT = 2
 
-const val LOC = HOME
+const val LOC = COSTCO
 
 const val LAT = 0
 const val LON = 1
@@ -204,10 +205,10 @@ class LocationWorker(
                 applicationContext.contentResolver,
                 Settings.Secure.ANDROID_ID
             )
-            locationDoc.account = prefs.getString(MainActivity.ACCOUNT_ID, "")
+            locationDoc.accountId = prefs.getString(MainActivity.ACCOUNT_ID, "")
             locationDoc.email = prefs.getString(MainActivity.EMAIL, "")
             locationDoc.stepLength = spacing.toLong()
-            locationDoc.previousBearing = previousBearing
+            locationDoc.previousEventBearing = previousBearing
             locationDoc.hasAccuracy = location.hasAccuracy();
             locationDoc.hasAltitude = location.hasAltitude();
             locationDoc.hasBearing = location.hasBearing();
@@ -251,8 +252,7 @@ class LocationWorker(
         bearing = bearing,
         accuracy = accuracy,
         speed = speed,
-        timestamp = time,
-        datetime = Date(time).toString()
+        deviceTime = Timestamp(Date(time))
     )
 
     /**
