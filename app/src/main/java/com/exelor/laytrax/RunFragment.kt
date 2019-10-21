@@ -62,12 +62,14 @@ class RunFragment : Fragment(), View.OnClickListener {
         )
         (view.findViewById<View>(R.id.spacing_value) as TextView)
             .text = getString(
-            R.string.current_spacing, getString(R.string.spacing_label_2),
+            R.string.current_spacing,
+            getString(R.string.spacing_label_2),
             prefs.getLong(MainActivity.SPACING, 0)
         )
         (view.findViewById<View>(R.id.interval_value) as TextView)
             .text = getString(
-            R.string.current_interval, getString(R.string.interval_label),
+            R.string.current_interval,
+            getString(R.string.interval_label),
             prefs.getLong(MainActivity.INTERVAL, 0),
             prefs.getString(MainActivity.INTERVAL_UNIT, "")?.toLowerCase()
         )
@@ -75,6 +77,14 @@ class RunFragment : Fragment(), View.OnClickListener {
         // Stop button
         val button = view!!.findViewById<View>(R.id.stop_button) as Button
         button.setOnClickListener(this)
+
+        // Version Info
+        (view.findViewById<View>(R.id.version) as TextView)
+            .text = getString(
+            R.string.current_version,
+            BuildConfig.VERSION_NAME,
+            BuildConfig.VERSION_CODE
+        )
 
         return view
     }

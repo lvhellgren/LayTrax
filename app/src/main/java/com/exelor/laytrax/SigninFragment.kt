@@ -61,6 +61,14 @@ class SigninFragment : Fragment(), View.OnClickListener {
         // Create service request button click handler
         (this.signinView.findViewById<View>(R.id.service_request_button) as Button).setOnClickListener(this)
 
+
+        // Version Info
+        (this.signinView.findViewById<View>(R.id.version) as TextView).text = getString(
+            R.string.current_version,
+            BuildConfig.VERSION_NAME,
+            BuildConfig.VERSION_CODE
+        )
+
         return this.signinView
     }
 
