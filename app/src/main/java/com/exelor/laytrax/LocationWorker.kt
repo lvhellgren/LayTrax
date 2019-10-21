@@ -169,15 +169,15 @@ class LocationWorker(
                         val spacingThreshold = prefs.getLong(MainActivity.SPACING, MainActivity.SPACING_DEFAULT)
                         if (results[0] >= spacingThreshold || ignoreSpacingThreshold) {
 
-                            var previousBearing = 0.0F;
+                            var previousEventBearing = 0.0F;
                             if (lastLatitude + lastLongitude != 0.0) {
                                 val lastLocation = Location("");
                                 lastLocation.setLatitude(lastLatitude);
                                 lastLocation.setLongitude(lastLongitude);
-                                previousBearing = lastLocation.bearingTo(location);
+                                previousEventBearing = lastLocation.bearingTo(location);
                             }
 
-                            updateDb(location, spacing, previousBearing)
+                            updateDb(location, spacing, previousEventBearing)
 
                             val editor = prefs.edit()
                             editor.putDouble(LAST_LATITUDE, location.latitude)
@@ -194,7 +194,7 @@ class LocationWorker(
     /**
      * Sends location data to Firestore DB
      */
-    private fun updateDb(location: Location?, spacing: Float, previousBearing: Float) {
+    private fun updateDb(location: Location?, spacing: Float, previousEventBearing: Float) {
         if (location !== null) {
             val db = FirebaseFirestore.getInstance()
             val geocoder = Geocoder(context, Locale.getDefault())
@@ -208,7 +208,7 @@ class LocationWorker(
             locationDoc.accountId = prefs.getString(MainActivity.ACCOUNT_ID, "")
             locationDoc.email = prefs.getString(MainActivity.EMAIL, "")
             locationDoc.stepLength = spacing.toLong()
-            locationDoc.previousEventBearing = previousBearing
+            locationDoc.previousEventBearing = previousEventBearing
             locationDoc.hasAccuracy = location.hasAccuracy();
             locationDoc.hasAltitude = location.hasAltitude();
             locationDoc.hasBearing = location.hasBearing();
