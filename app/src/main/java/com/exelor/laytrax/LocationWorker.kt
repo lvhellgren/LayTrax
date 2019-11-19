@@ -50,7 +50,7 @@ const val LAST_LONGITUDE = "lastLongitude"
 
 
 const val useTestData = false
-const val ignoreSpacingThreshold = false;
+const val ignoreSpacingThreshold = false
 
 val COORDS = arrayOf(
     doubleArrayOf(33.634221774746806, -117.87835762491568),
@@ -66,7 +66,7 @@ const val COSTCO = 3
 const val HOME = 4
 const val HOME_DEPOT = 2
 
-const val LOC = COSTCO
+const val LOC = HOME_DEPOT
 
 const val LAT = 0
 const val LON = 1
@@ -160,7 +160,7 @@ class LocationWorker(
                         Location.distanceBetween(
                             lastLatitude,
                             lastLongitude,
-                            location!!.latitude,
+                            location.latitude,
                             location.longitude,
                             results
                         )
@@ -169,12 +169,12 @@ class LocationWorker(
                         val spacingThreshold = prefs.getLong(MainActivity.SPACING, MainActivity.SPACING_DEFAULT)
                         if (results[0] >= spacingThreshold || ignoreSpacingThreshold) {
 
-                            var previousEventBearing = 0.0F;
+                            var previousEventBearing = 0.0F
                             if (lastLatitude + lastLongitude != 0.0) {
-                                val lastLocation = Location("");
-                                lastLocation.setLatitude(lastLatitude);
-                                lastLocation.setLongitude(lastLongitude);
-                                previousEventBearing = lastLocation.bearingTo(location);
+                                val lastLocation = Location("")
+                                lastLocation.setLatitude(lastLatitude)
+                                lastLocation.setLongitude(lastLongitude)
+                                previousEventBearing = lastLocation.bearingTo(location)
                             }
 
                             updateDb(location, spacing, previousEventBearing)
@@ -209,10 +209,10 @@ class LocationWorker(
             locationDoc.email = prefs.getString(MainActivity.EMAIL, "")
             locationDoc.stepLength = spacing.toLong()
             locationDoc.previousEventBearing = previousEventBearing
-            locationDoc.hasAccuracy = location.hasAccuracy();
-            locationDoc.hasAltitude = location.hasAltitude();
-            locationDoc.hasBearing = location.hasBearing();
-            locationDoc.hasSpeed = location.hasSpeed();
+            locationDoc.hasAccuracy = location.hasAccuracy()
+            locationDoc.hasAltitude = location.hasAltitude()
+            locationDoc.hasBearing = location.hasBearing()
+            locationDoc.hasSpeed = location.hasSpeed()
 
             val addresses = geocoder.getFromLocation(locationDoc.latitude, locationDoc.longitude, 1)
             if (addresses.size > 0) {
@@ -220,12 +220,12 @@ class LocationWorker(
                 locationDoc.address = address.toLocationAddress()
             }
 
-            val id = db.collection(MainActivity.COLLECTION_NAME)
+            val id = db.collection(COLLECTION_NAME)
                 .document()
-                .id;
+                .id
             locationDoc.documentId = id
 
-            db.collection(MainActivity.COLLECTION_NAME)
+            db.collection(COLLECTION_NAME)
                 .document(id)
                 .set(locationDoc)
                 .addOnSuccessListener {
