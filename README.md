@@ -7,6 +7,7 @@ A server-less Angular application [Tracker] (https://github.com/lvhellgren/Track
 and defining geo-fencing conditions on the stored information.
 
 #### Screens
+See Screenshots.pdf for images.
 1. Sign In
     - Email field
     - Password field
