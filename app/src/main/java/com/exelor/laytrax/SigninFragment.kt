@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Lars Hellgren (lars@exelor.com).
+// Copyright (c) 2020 Lars Hellgren (lars@exelor.com).
 // All rights reserved.
 //
 // This code is licensed under the MIT License.
@@ -44,12 +44,24 @@ class SigninFragment : Fragment(), View.OnClickListener {
     private val TAG = "SigninFragment"
     private lateinit var signinView: View
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, bundle: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        bundle: Bundle?
+    ): View? {
         (activity as MainActivity).headerText!!.text = getText(R.string.signin_page_title)
 
         // Get any UI data saved in preferences
         val prefs = context!!.getSharedPreferences(MainActivity.SHARED_PREFS_NAME, 0)
         val email = prefs.getString(MainActivity.EMAIL, "")
+
+        // If needed, initialize the accuracy setting
+        val accuracy = prefs.getString(MainActivity.ACCURACY, null)
+        if (accuracy.isNullOrEmpty()) {
+            val editor = prefs.edit()
+            editor.putString(MainActivity.ACCURACY, getString(R.string.high_accuracy_label))
+            editor.apply()
+        }
 
         // Include data in UI
         this.signinView = inflater.inflate(R.layout.signin_fragment, container, false)
@@ -59,8 +71,9 @@ class SigninFragment : Fragment(), View.OnClickListener {
         (this.signinView.findViewById<View>(R.id.login_button) as Button).setOnClickListener(this)
 
         // Create service request button click handler
-        (this.signinView.findViewById<View>(R.id.service_request_button) as Button).setOnClickListener(this)
-
+        (this.signinView.findViewById<View>(R.id.service_request_button) as Button).setOnClickListener(
+            this
+        )
 
         // Version Info
         (this.signinView.findViewById<View>(R.id.version) as TextView).text = getString(
@@ -103,7 +116,8 @@ class SigninFragment : Fragment(), View.OnClickListener {
     @NonNull
     private fun initTracking(data: Data) {
         val email: String = data.getString(MainActivity.EMAIL) ?: ""
-        val password = (this.signinView.findViewById<View>(R.id.password_field) as EditText).text.toString()
+        val password =
+            (this.signinView.findViewById<View>(R.id.password_field) as EditText).text.toString()
 
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             Toast.makeText(activity, getString(R.string.invalid_email), Toast.LENGTH_SHORT).show()
@@ -111,7 +125,8 @@ class SigninFragment : Fragment(), View.OnClickListener {
         }
 
         if (password.isEmpty() || password.length < 8) {
-            Toast.makeText(activity, getString(R.string.invalid_password), Toast.LENGTH_SHORT).show()
+            Toast.makeText(activity, getString(R.string.invalid_password), Toast.LENGTH_SHORT)
+                .show()
             return
         }
 
@@ -128,7 +143,11 @@ class SigninFragment : Fragment(), View.OnClickListener {
                     if (task.isSuccessful) {
                         showStartFragment()
                     } else {
-                        Toast.makeText(activity, getString(R.string.sign_in_error), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            activity,
+                            getString(R.string.sign_in_error),
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                     savePreferences(data)
                     dialog.dismiss()

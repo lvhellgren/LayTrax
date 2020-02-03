@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Lars Hellgren (lars@exelor.com).
+// Copyright (c) 2020 Lars Hellgren (lars@exelor.com).
 // All rights reserved.
 //
 // This code is licensed under the MIT License.
@@ -24,34 +24,38 @@
 package com.exelor.laytrax
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.work.*
+import com.exelor.laytrax.MainActivity.Companion.TIME_INTERVAL_DEFAULT
 import com.google.firebase.auth.FirebaseAuth
-import java.util.concurrent.TimeUnit
 
 class StartFragment : Fragment() {
 
-    private val TAG = "StartFragment"
+    private val TAG = "*** StartFragment"
     private lateinit var startView: View
-    private val defaultIntervalValue: Long = 30
+    private lateinit var prefs: SharedPreferences
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, bundle: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        bundle: Bundle?
+    ): View? {
         (activity as MainActivity).headerText!!.text = getText(R.string.start_page_title)
 
         // Initialize the UI with data saved in preferences
-        val prefs = context!!.getSharedPreferences(MainActivity.SHARED_PREFS_NAME, 0)
+        prefs = context!!.getSharedPreferences(MainActivity.SHARED_PREFS_NAME, 0)
 
         this.startView = inflater.inflate(R.layout.start_fragment, container, false)
 
@@ -63,38 +67,20 @@ class StartFragment : Fragment() {
         val accountId = prefs.getString(MainActivity.ACCOUNT_ID, "")
         (startView.findViewById<View>(R.id.account_id_field) as TextView).text = accountId
 
-        // Time interval
-        val interval = prefs.getLong(MainActivity.INTERVAL, defaultIntervalValue)
-        (startView.findViewById<View>(R.id.interval_field) as TextView).text = interval.toString()
-
-        // Step spacing
+        // Location spacing
         val spacing = prefs.getLong(MainActivity.SPACING, MainActivity.SPACING_DEFAULT)
         val spacingField = startView.findViewById<View>(R.id.spacing_field)
         (spacingField as TextView).text = spacing.toString()
-
-        // Time unit radio button
-        var timeUnit: String = prefs.getString(MainActivity.INTERVAL_UNIT, MainActivity.MINUTES) as String
-        val radioGroup = this.startView.findViewById<View>(R.id.units_group) as RadioGroup
-        val id = if (timeUnit == MainActivity.SECONDS) R.id.seconds else R.id.minutes
-        val checked = this.startView.findViewById<View>(id) as RadioButton
-        radioGroup.check(checked.id)
 
         // Create step spacing value change listener
         spacingField.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(editable: Editable?) {
                 val s = editable.toString()
-                if (s.isNotEmpty()) {
-                    val value = s.toLong()
-                    if (value >= MainActivity.SPACING_MIN) {
-                        val editor = prefs.edit()
-                        editor.putLong(MainActivity.SPACING, value)
-                        editor.apply()
-                    } else {
-                        Toast.makeText(
-                            activity, getString(R.string.spacing_too_small)
-                                    + " " + MainActivity.SPACING_MIN, Toast.LENGTH_SHORT
-                        ).show()
-                    }
+                if (s.isEmpty()) {
+                    toast("${getString(R.string.spacing_label)} must be numeric")
+                    val editor = prefs.edit()
+                    editor.putLong(MainActivity.SPACING, 0L)
+                    editor.apply()
                 }
             }
 
@@ -102,35 +88,75 @@ class StartFragment : Fragment() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
 
+        // Time interval
+        val interval = prefs.getLong(MainActivity.TIME_INTERVAL, TIME_INTERVAL_DEFAULT)
+        val intervalField = startView.findViewById<View>(R.id.time_interval)
+        (intervalField as TextView).text = interval.toString()
+
+        // Create time value change listener
+        intervalField.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(editable: Editable?) {
+                val s = editable.toString()
+                if (s.isEmpty()) {
+                    toast("${getString(R.string.time_interval_label)} must be numeric")
+                    val editor = prefs.edit()
+                    editor.putLong(MainActivity.TIME_INTERVAL, 0L)
+                    editor.apply()
+                }
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+
+        // Time unit radio buttons
+        val timeUnit: String = prefs.getString(
+            MainActivity.TIME_INTERVAL_UNIT,
+            getString(R.string.minutes_interval_label)
+        ) as String
+        val timeUnitRadioGroup =
+            this.startView.findViewById<View>(R.id.time_unit_group) as RadioGroup
+        val timeUnitId =
+            if (timeUnit == getString(R.string.minutes_interval_label)) R.id.minutes_interval else R.id.seconds_interval
+        val timeUnitChecked = this.startView.findViewById<View>(timeUnitId) as RadioButton
+        timeUnitRadioGroup.check(timeUnitChecked.id)
+
+        // Create radio button click handler
+        timeUnitRadioGroup.setOnCheckedChangeListener(RadioGroup.OnCheckedChangeListener { group, idx ->
+            val radioButton = group.findViewById(idx) as RadioButton
+            val setting = radioButton.text.toString().substringBefore(" ")
+            val editor = prefs.edit()
+            editor.putString(MainActivity.TIME_INTERVAL_UNIT, setting)
+            editor.apply()
+        })
+
+        // Accuracy radio buttons
+        val accuracy: String = prefs.getString(
+            MainActivity.ACCURACY,
+            getString(R.string.high_accuracy_label)
+        ) as String
+        val radioGroup = this.startView.findViewById<View>(R.id.accuracy_group) as RadioGroup
+        val id =
+            if (accuracy == getString(R.string.high_accuracy_label)) R.id.high_accuracy else R.id.low_accuracy
+        val checked = this.startView.findViewById<View>(id) as RadioButton
+        radioGroup.check(checked.id)
+
         // Create radio button click handler
         radioGroup.setOnCheckedChangeListener(RadioGroup.OnCheckedChangeListener { group, idx ->
             val radioButton = group.findViewById(idx) as RadioButton
-            timeUnit = radioButton.getText().toString().substringBefore(" ")
-            displayIntervalDefault(timeUnit)
+            val setting = radioButton.text.toString().substringBefore(" ")
+            val editor = prefs.edit()
+            editor.putString(MainActivity.ACCURACY, setting)
+            editor.apply()
         })
-
-        // Add ranges to radio button labels
-        (this.startView.findViewById<View>(R.id.minutes) as RadioButton)
-            .setText(
-                getString(R.string.minutes_unit_label) + " ("
-                        + MainActivity.INTERVAL_MINUTES_MIN.toLong() + " - "
-                        + MainActivity.INTERVAL_MINUTES_MAX.toLong() + ")"
-            )
-        (this.startView.findViewById<View>(R.id.seconds) as RadioButton)
-            .setText(
-                getString(R.string.seconds_unit_label) + " ("
-                        + MainActivity.INTERVAL_SECONDS_MIN.toLong() + " - "
-                        + MainActivity.INTERVAL_SECONDS_MAX.toLong() + ")"
-            )
-
 
         // Create start button click handler
         val startButton = this.startView.findViewById<View>(R.id.start_button) as Button
         startButton.setOnClickListener(View.OnClickListener { view ->
-            onStartClick(timeUnit)
+            onStartClick()
         })
 
-        // Create start button click handler
+        // Create sign-out  button click handler
         val signOutButton = this.startView.findViewById<View>(R.id.sign_out_button) as Button
         signOutButton.setOnClickListener(View.OnClickListener { view ->
             onSignOutClick()
@@ -139,111 +165,87 @@ class StartFragment : Fragment() {
         return this.startView
     }
 
-    private fun onStartClick(timeUnit: String) {
-        // Check location permission is granted - if it is not, request the permission from the user
-        val permission = ContextCompat.checkSelfPermission(
-            activity as MainActivity,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
-        if (permission != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(
+    private fun onStartClick() {
+        // Check for location granularity permissions being granted
+        if (ContextCompat.checkSelfPermission(
                 activity as MainActivity,
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1
-            )
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            toast(getString(R.string.insufficient_permission))
+            return
         }
 
-        if (validateAndSavePreferences(timeUnit)) {
-            startWorker()
+        // Check for the location settings options being turned on
+        val locationManager: LocationManager =
+            context?.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        if (!(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+                    || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
+        ) {
+            toast(getString(R.string.location_setting))
+            return
+        }
+
+        if (validateAndSavePreferences()) {
+            val startIntent = Intent(context, LocationService::class.java)
+            context?.startForegroundService(startIntent)
             showRunFragment()
+        } else {
+            showStartFragment()
         }
     }
 
-    private fun validateAndSavePreferences(timeUnit: String): Boolean {
-        val interval = (startView.findViewById<View>(R.id.interval_field) as EditText).text.toString().toLong()
-        val accountId = (startView.findViewById<View>(R.id.account_id_field) as EditText).text.toString()
-
-        var intervalMin: Long = 0
-        var intervalMax: Long = 0
-        if (timeUnit == MainActivity.SECONDS) {
-            intervalMin = MainActivity.INTERVAL_SECONDS_MIN
-            intervalMax = MainActivity.INTERVAL_SECONDS_MAX
-        } else if (timeUnit == MainActivity.MINUTES) {
-            intervalMin = MainActivity.INTERVAL_MINUTES_MIN
-            intervalMax = MainActivity.INTERVAL_MINUTES_MAX
-        }
-        if (interval < intervalMin || interval > intervalMax) {
-            Toast.makeText(activity, getString(R.string.interval_out_of_range), Toast.LENGTH_SHORT).show()
+    private fun validateAndSavePreferences(): Boolean {
+        val timeIntervalText =
+            (startView.findViewById<View>(R.id.time_interval) as EditText).text.toString()
+        if (timeIntervalText.isEmpty()) {
+            toast("${getString(R.string.time_interval_label)} must be numeric")
             return false
         }
+        val timeInterval = timeIntervalText.toLong()
+        var timeIntervalSeconds: Long
+
+        val timeUnit = prefs.getString(MainActivity.TIME_INTERVAL_UNIT, "")
+        if (timeUnit == getString(R.string.seconds_interval_label)) {
+            timeIntervalSeconds = timeInterval
+        } else {
+            timeIntervalSeconds = timeInterval * 60
+        }
+
+        if (timeIntervalSeconds < MainActivity.TIME_INTERVAL_SECONDS_MIN) {
+            toast(getString(R.string.interval_too_low, MainActivity.TIME_INTERVAL_SECONDS_MIN))
+            return false
+        }
+
+        val accountId =
+            (startView.findViewById<View>(R.id.account_id_field) as EditText).text.toString()
+        if (accountId.isEmpty() || accountId.isBlank()) {
+            toast(getString(R.string.account_missing))
+            return false
+        }
+
+        val spacing =
+            (startView.findViewById<View>(R.id.spacing_field) as EditText).text.toString().toLong()
 
         val prefs = activity!!
             .applicationContext
             .getSharedPreferences(MainActivity.SHARED_PREFS_NAME, 0)
 
         val editor = prefs.edit()
-        editor.putString(MainActivity.INTERVAL_UNIT, timeUnit)
-        editor.putLong(MainActivity.INTERVAL, interval)
         editor.putString(MainActivity.ACCOUNT_ID, accountId)
+        editor.putLong(MainActivity.SPACING, spacing)
+        editor.putLong(MainActivity.TIME_INTERVAL, timeInterval)
         editor.apply()
 
         return true
     }
 
-    /**
-     * Set the UI interval value to default value on a time unit change.
-     */
-    private fun displayIntervalDefault(unit: String) {
-        val prefs = context!!.getSharedPreferences(MainActivity.SHARED_PREFS_NAME, 0)
-        val savedUnit = prefs.getString(MainActivity.INTERVAL_UNIT, "")
-        if (unit != savedUnit) {
-            var interval: Long
-
-            if (unit == MainActivity.SECONDS) {
-                interval = MainActivity.INTERVAL_SECONDS_DEFAULT
-            } else {
-                interval = MainActivity.INTERVAL_MINUTES_DEFAULT
-            }
-
-            val intervalField = startView.findViewById<View>(R.id.interval_field)
-            (intervalField as TextView).text = interval.toString()
-
-            val preferences = activity!!
-                .applicationContext
-                .getSharedPreferences(MainActivity.SHARED_PREFS_NAME, 0)
-            val editor = preferences.edit()
-            editor.putString(MainActivity.INTERVAL_UNIT, unit)
-            editor.apply()
-        }
-    }
-
-    private fun startWorker() {
-        val prefs = context!!.getSharedPreferences(MainActivity.SHARED_PREFS_NAME, 0)
-        val timeUnit = prefs.getString(MainActivity.INTERVAL_UNIT, MainActivity.MINUTES)
-
-        val constraints = Constraints.Builder()
-            .build()
-
-        val workRequest: WorkRequest
-
-        if (timeUnit == MainActivity.SECONDS) {
-            Log.d(TAG, "Interval unit in seconds")
-            workRequest = OneTimeWorkRequest.Builder(LocationWorker::class.java)
-                .setConstraints(constraints)
-                .addTag(MainActivity.TRACKING_WORKER)
-                .build()
-        } else if (timeUnit == MainActivity.MINUTES) {
-            Log.d(TAG, "Interval unit in minutes")
-            workRequest = PeriodicWorkRequest.Builder(LocationWorker::class.java, 15, TimeUnit.MINUTES)
-                .setConstraints(constraints)
-                .addTag(MainActivity.TRACKING_WORKER)
-                .build()
-        } else {
-            throw(Exception("Invalid interval time"))
-        }
-
-        WorkManager.getInstance(activity!!.applicationContext).enqueue(workRequest)
-
-        Toast.makeText(activity, getString(R.string.service_started), Toast.LENGTH_SHORT).show()
+    private fun showStartFragment() {
+        val fragment = StartFragment()
+        activity!!.supportFragmentManager
+            .beginTransaction()
+            .replace(R.id.fragment_container, fragment)
+            .commit()
     }
 
     /**
@@ -267,5 +269,9 @@ class StartFragment : Fragment() {
         val intent = Intent(activity, MainActivity::class.java)
         activity!!.startActivity(intent)
         activity.finish()
+    }
+
+    private fun toast(msg: String) {
+        Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
     }
 }

@@ -1,44 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:app="http://schemas.android.com/apk/res-auto"
-              xmlns:tools="http://schemas.android.com/tools"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:orientation="vertical"
-              android:layout_marginTop="0dp"
-              android:paddingTop="0dp"
-              android:paddingLeft="@dimen/activity_horizontal_margin"
-              android:paddingRight="@dimen/activity_horizontal_margin"
-              tools:context=".StartFragment">
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="0dp"
+        android:orientation="vertical"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingTop="0dp"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        tools:context=".StartFragment">
 
     <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
             android:layout_marginLeft="10dp"
+            android:layout_marginTop="5dp"
             android:layout_marginBottom="10dp"
             android:orientation="vertical">
+
         <TextView
                 android:id="@+id/user_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="5dp"
-                android:textSize="12dp"
-                android:text="@string/user_label"/>
+                android:text="@string/user_label"
+                android:textSize="12dp" />
+
         <TextView
                 android:id="@+id/user_value"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="16dp"
-                android:text="@string/user_label"/>
+                android:text="@string/user_label"
+                android:textSize="16dp" />
     </LinearLayout>
 
     <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="5dp"
-            android:hint="@string/account_label"
             android:focusedByDefault="false"
+            android:hint="@string/account_label"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
@@ -47,14 +49,14 @@
         <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/account_id_field"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="0dp"
             android:layout_marginLeft="5dp"
+            android:layout_marginTop="5dp"
             android:hint="@string/spacing_label"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
@@ -63,63 +65,116 @@
 
         <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/spacing_field"
-                android:focusedByDefault="false"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="number"/>
+                android:focusedByDefault="false"
+                android:inputType="number" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="0dp"
-            android:layout_marginLeft="5dp"
-            android:hint="@string/interval_label"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="5dp"
             android:focusedByDefault="false"
+            android:hint="@string/time_interval_label"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
         <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/interval_field"
+                android:id="@+id/time_interval"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="number"/>
+                android:inputType="number"
+                android:textAlignment="viewStart" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <TextView
+    <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="0dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginBottom="5dp"
-            android:textSize="12sp"
-            android:text="@string/interval_unit_label"/>
+            android:orientation="horizontal">
 
-    <RadioGroup
-            android:id="@+id/units_group"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="3dp"
-            android:checkedButton="@+id/minutes"
-            android:orientation="vertical">
-        <RadioButton
-                android:id="@+id/minutes"
+        <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/minutes_unit_label"/>
-        <RadioButton
-                android:id="@+id/seconds"
+                android:layout_alignParentStart="true"
+                android:orientation="vertical">
+
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginBottom="5dp"
+                    android:text="@string/time_interval_unit_label"
+                    android:textSize="12sp" />
+
+            <RadioGroup
+                    android:id="@+id/time_unit_group"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="3dp"
+                    android:checkedButton="@+id/minutes_interval"
+                    android:orientation="vertical">
+
+                <RadioButton
+                        android:id="@+id/minutes_interval"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="20dp"
+                        android:text="@string/minutes_interval_label" />
+
+                <RadioButton
+                        android:id="@+id/seconds_interval"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/seconds_interval_label" />
+            </RadioGroup>
+        </LinearLayout>
+
+        <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/seconds_unit_label"/>
-    </RadioGroup>
+                android:layout_alignParentEnd="true"
+                android:orientation="vertical">
+
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginBottom="5dp"
+                    android:text="@string/accuracy_label"
+                    android:textSize="12sp" />
+
+            <RadioGroup
+                    android:id="@+id/accuracy_group"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="3dp"
+                    android:checkedButton="@+id/high_accuracy"
+                    android:orientation="vertical">
+
+                <RadioButton
+                        android:id="@+id/high_accuracy"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="20dp"
+                        android:text="@string/high_accuracy_label" />
+
+                <RadioButton
+                        android:id="@+id/low_accuracy"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/low_accuracy_label" />
+            </RadioGroup>
+        </LinearLayout>
+    </RelativeLayout>
 
     <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp">
+            android:layout_marginTop="20dp">
 
         <Button
                 android:id="@+id/start_button"
@@ -131,7 +186,7 @@
                 android:clickable="true"
                 android:text="@string/start"
                 android:textColor="#FFF"
-                android:textSize="18sp"/>
+                android:textSize="18sp" />
     </RelativeLayout>
 
     <RelativeLayout
@@ -149,7 +204,7 @@
                 android:clickable="true"
                 android:text="@string/sign_out"
                 android:textColor="#FFF"
-                android:textSize="18sp"/>
+                android:textSize="18sp" />
     </RelativeLayout>
 
 </LinearLayout>

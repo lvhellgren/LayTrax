@@ -3,24 +3,26 @@ LayTrax is an Android application for making a smart phone function as a GPS loc
 location information in a cloud database, where both current and historical locations can be accessed by other applications. 
 LayTrax provides user authentication and authorization along with user-controllable tracking interval and distance options.
 
-In order to access and view the stored data in maps and tables, a serverless Angular application based on the [Leapfire](https://github.com/lvhellgren/Leapfire)
-application base is currently being developed.
+A server-less Angular application [Tracker] (https://github.com/lvhellgren/Tracker) application is available for accessing
+and defining geo-fencing conditions on the stored information.
 
 #### Screens
 1. Sign In
     - Email field
     - Password field
     - SIGN IN button
-    - REQUEST SERVICE ACCESS button
+    - REQUEST SERVICE ACCESS button 
 2. Service Access Request
     - Administrator Email field
-    - SEND button
+    - SEND button for requesting that the particular device be given location write access to the
+      database. If access is granted, the administrator will respond with the applicable account ID and user credentials.
     - RETURN button
 3. Setup
     - Account field
-    - MIN Footprint Separation field
+    - MIN Location distance field
     - GPS Time Interval field
     - Time Unit radio buttons (seconds or minutes)
+    - Accuracy radio buttons (High or Low)
     - START TRACKING button
     - SIGN OUT button
 4. Running
@@ -29,11 +31,11 @@ application base is currently being developed.
 #### Features
 
 ##### Cloud Database
-LayTrax sends location data to a Firestore database, where needed authentication and authorization rules can be applied.
+LayTrax sends location data to user accounts in a Firestore database, where authentication and authorization rules are applied.
 
-##### Background Worker
-A LayTrax background worker performs all periodic processing activity making this work continue even when the application
-is closed or after the user signs out from the phone session.
+##### Android Service
+A LayTrax service performs all periodic processing activity making this work continue even when the application
+runs in the background.
 
 ##### Sign In Requirement
 LayTrax uses Firebase "Sign In with Email and Password" authentication for ensuring that only known users will have access to the database.

@@ -33,10 +33,15 @@
                 android:layout_height="wrap_content"
                 android:text="@string/spacing_label"/>
         <TextView
-                android:id="@+id/interval_value"
+                android:id="@+id/time_interval_value"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/interval_label"/>
+                android:text="@string/time_interval_label"/>
+        <TextView
+                android:id="@+id/accuracy_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/accuracy_label"/>
     </LinearLayout>
 
     <RelativeLayout

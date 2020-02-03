@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Lars Hellgren (lars@exelor.com).
+// Copyright (c) 2020 Lars Hellgren (lars@exelor.com).
 // All rights reserved.
 //
 // This code is licensed under the MIT License.
@@ -23,23 +23,24 @@
 
 package com.exelor.laytrax
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.work.Data
-import androidx.work.WorkManager
-import com.google.firebase.auth.FirebaseAuth
+import com.exelor.laytrax.MainActivity.Companion.ACCURACY
+import com.exelor.laytrax.MainActivity.Companion.TIME_INTERVAL_UNIT
 
 class RunFragment : Fragment(), View.OnClickListener {
 
-    private val TAG = "RunFragment"
+    private val classTag = "*** RunFragment"
 
+    @SuppressLint("DefaultLocale")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -66,12 +67,18 @@ class RunFragment : Fragment(), View.OnClickListener {
             getString(R.string.spacing_label_2),
             prefs.getLong(MainActivity.SPACING, 0)
         )
-        (view.findViewById<View>(R.id.interval_value) as TextView)
+        (view.findViewById<View>(R.id.time_interval_value) as TextView)
             .text = getString(
-            R.string.current_interval,
-            getString(R.string.interval_label),
-            prefs.getLong(MainActivity.INTERVAL, 0),
-            prefs.getString(MainActivity.INTERVAL_UNIT, "")?.toLowerCase()
+            R.string.current_time_interval,
+            getString(R.string.time_interval_label),
+            prefs.getLong(MainActivity.TIME_INTERVAL, 0),
+            prefs.getString(TIME_INTERVAL_UNIT, "")?.toLowerCase()
+        )
+        (view.findViewById<View>(R.id.accuracy_value) as TextView)
+            .text = getString(
+            R.string.current_accuracy,
+            getString(R.string.accuracy_label),
+            prefs.getString(ACCURACY, "")
         )
 
         // Stop button
@@ -92,22 +99,16 @@ class RunFragment : Fragment(), View.OnClickListener {
     override fun onClick(view: View) {
         when (view.id) {
             R.id.stop_button -> {
-                stopTracking()
+                stopService()
                 showStartFragment()
             }
         }
     }
 
-    private fun stopTracking() {
-        WorkManager.getInstance(activity!!).cancelAllWorkByTag(MainActivity.TRACKING_WORKER)
-        WorkManager.getInstance(activity!!).pruneWork()
-
-        val firebaseAuth = FirebaseAuth.getInstance()
-        if (firebaseAuth!!.currentUser != null) {
-            firebaseAuth.signOut()
-        }
-
-        Toast.makeText(activity, getString(R.string.stopped), Toast.LENGTH_SHORT).show()
+    private fun stopService() {
+        Log.d(classTag, "stopService")
+        val stopIntent = Intent(context, LocationService::class.java)
+        context?.stopService(stopIntent)
     }
 
     /**
@@ -119,4 +120,5 @@ class RunFragment : Fragment(), View.OnClickListener {
         activity!!.startActivity(intent)
         activity.finish()
     }
+
 }

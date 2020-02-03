@@ -16,10 +16,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+                android:name=".LocationService"
+                android:foregroundServiceType="location"
+                android:enabled="true"
+                android:exported="false">
+        </service>
     </application>
 
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
+    <!-- Normal permissions (always granted)-->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 </manifest>

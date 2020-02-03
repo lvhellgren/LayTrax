@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Lars Hellgren (lars@exelor.com).
+// Copyright (c) 2020 Lars Hellgren (lars@exelor.com).
 // All rights reserved.
 //
 // This code is licensed under the MIT License.
@@ -23,54 +23,117 @@
 
 package com.exelor.laytrax
 
+import android.Manifest.permission.ACCESS_COARSE_LOCATION
+import android.Manifest.permission.ACCESS_FINE_LOCATION
+import android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
+import android.app.ActivityManager
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
+import androidx.core.app.ActivityCompat
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
 import com.google.firebase.auth.FirebaseAuth
 
 
 class MainActivity : AppCompatActivity() {
 
-    private val TAG = "MainActivity"
+    private val TAG: String = "*** MainActivity"
 
     var headerText: TextView? = null
 
-    private var liveData: LiveData<List<WorkInfo>>? = null
+    val REQUEST_CODE = 99
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
-
         this.headerText = findViewById(R.id.header_text)
+    }
 
-        if (findViewById<View>(R.id.fragment_container) != null) {
-            selectPage()
+    override fun onStart() {
+        super.onStart()
+
+        if (hasPlayServices()) {
+            if (findViewById<View>(R.id.fragment_container) != null) {
+                requestPermissions()
+            } else {
+                this.headerText!!.text = getText(R.string.err_no_container)
+            }
         } else {
-            this.headerText!!.text = getText(R.string.err_no_container)
+            toast("Error: Google Play Services not available")
         }
     }
 
+    private fun requestPermissions() {
+        val hasForegroundPermission = ActivityCompat.checkSelfPermission(this,
+            ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        Log.d(TAG, "hasForegroundPermission: $hasForegroundPermission")
+
+        if (hasForegroundPermission) {
+            val hasBackgroundPermission = (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) ||
+                ActivityCompat.checkSelfPermission(this, ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+            Log.d(TAG, "hasBackgroundPermission: $hasBackgroundPermission")
+            if (hasBackgroundPermission) {
+                selectPage()
+            } else {
+                ActivityCompat.requestPermissions(this,
+                    arrayOf(ACCESS_BACKGROUND_LOCATION), REQUEST_CODE)
+            }
+        } else {
+            ActivityCompat.requestPermissions(this,
+                arrayOf(ACCESS_FINE_LOCATION,
+                    ACCESS_BACKGROUND_LOCATION), REQUEST_CODE)
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String?>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            selectPage()
+        }
+    }
+
+    /* Checks if Google Play Services is available */
+    private fun hasPlayServices(): Boolean {
+        return GoogleApiAvailability.getInstance()
+            .isGooglePlayServicesAvailable(this) == ConnectionResult.SUCCESS
+    }
+
     /**
-     * If tracking is in progress, navigate to the run page, otherwise, the sign-in page.
+     * If tracking is in progress, navigate to the run page, otherwise, the sign-in or start page.
      */
     private fun selectPage() {
-        WorkManager.getInstance(applicationContext)
-            .getWorkInfosByTagLiveData(TRACKING_WORKER)!!.observe(this, Observer { workInfos: List<WorkInfo> ->
-                if (workInfos.isEmpty()) {
-                    if (FirebaseAuth.getInstance()?.currentUser?.email != null) {
-                        showStartPage()
-                    } else {
-                        showSigninPage()
-                    }
-                } else {
-                    showRunPage()
-                }
-            })
+        if (!isServiceRunning(this, LocationService::class.java)) {
+            if (FirebaseAuth.getInstance()?.currentUser?.email != null) {
+                showStartPage()
+            } else {
+                showSigninPage()
+            }
+        } else {
+            showRunPage()
+        }
+    }
+
+    private fun isServiceRunning(context: Context, serviceClass: Class<LocationService>): Boolean {
+        val manager: ActivityManager =
+            context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        for (service in manager.getRunningServices(Int.MAX_VALUE)) {
+            if (serviceClass.name == service.service.className) {
+                return service.foreground
+            }
+        }
+        return false
     }
 
     private fun showSigninPage() {
@@ -91,34 +154,35 @@ class MainActivity : AppCompatActivity() {
 
     private fun showRunPage() {
         val fragment = RunFragment()
-        supportFragmentManager
+        this.supportFragmentManager
             .beginTransaction()
             .replace(R.id.fragment_container, fragment)
             .commit()
     }
 
+    private fun toast(msg: String) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+    }
+
     companion object {
         const val SHARED_PREFS_NAME = "TraxInfo"
         const val ACCOUNT_ID = "accountId"
-        const val EMAIL = "email"
-        const val TRACKING_WORKER = "tracking"
 
-        const val INTERVAL = "interval"
-        const val INTERVAL_SECONDS_DEFAULT = 5L
-        const val INTERVAL_SECONDS_MIN = 2L
-        const val INTERVAL_SECONDS_MAX = 60 * 9L
-        const val INTERVAL_MINUTES_DEFAULT = 15L
-        const val INTERVAL_MINUTES_MIN = 15L
-        const val INTERVAL_MINUTES_MAX = 60 * 24L
+        const val EMAIL = "email"
+
+        const val TIME_INTERVAL = "timeInterval"
+        const val TIME_INTERVAL_UNIT = "timeIntervalUnit"
+        const val TIME_INTERVAL_DEFAULT = 5L
+        const val TIME_INTERVAL_SECONDS_MIN = 5L
 
         const val SPACING = "spacing"
         const val SPACING_DEFAULT = 5L
-        const val SPACING_MIN = 5L
 
-        const val INTERVAL_UNIT = "timeUnit"
-        const val SECONDS = "Seconds"
-        const val MINUTES = "Minutes"
+        const val ACCURACY = "accuracy"
 
         const val COLLECTION_NAME = "device-events"
+
+        const val PREVIOUS_LATITUDE = "lastLatitude"
+        const val PREVIOUS_LONGITUDE = "lastLongitude"
     }
 }

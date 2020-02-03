@@ -10,30 +10,42 @@
     <string name="user_label">User</string>
     <string name="password_label">Password</string>
     <string name="account_label">Account</string>
-    <string name="spacing_label">MIN Recorded Step Length (meters)</string>
-    <string name="spacing_label_2">MIN Recorded Step Length</string>
-    <string name="interval_label">GPS Time Interval</string>
-    <string name="interval_unit_label">GPS Time Interval Unit</string>
-    <string name="minutes_unit_label">Minutes</string>
-    <string name="seconds_unit_label">Seconds</string>
+    <string name="spacing_label">Minimum Recorded Step Length (meters)</string>
+    <string name="spacing_label_2">Minimum Recorded Step Length</string>
+    <string name="accuracy_label">Location Accuracy</string>
+    <string name="high_accuracy_label">High</string>
+    <string name="low_accuracy_label">Low</string>
+    <string name="time_interval_label">Interval Time</string>
+    <string name="time_interval_unit_label">Interval Time Unit</string>
+    <string name="minutes_interval_label">Minutes</string>
+    <string name="seconds_interval_label">Seconds</string>
 
     <string name="service_request">Request Service Access</string>
     <string name="send_request">Send</string>
     <string name="return_request">Return</string>
     <string name="signin">Sign In</string>
     <string name="signing_in_msg">Signing In...</string>
-    <string name="service_started">Service Started</string>
+    <string name="service_started">Staring Location Service</string>
+    <string name="service_stopped">Stopping Location Service</string>
     <string name="start">Start Tracking</string>
     <string name="running">Tracking Service is Running</string>
     <string name="stop">Stop Tracking</string>
     <string name="sign_out">Sign Out</string>
 
+    <string name="notification_title">Application Status</string>
+    <string name="notification_text_start">Recording device locations</string>
+    <string name="notification_text_stop">Stopped recording device locations</string>
+
     <string name="stopped">Tracking Stopped</string>
     <string name="sign_in_error">Error signing in</string>
     <string name="invalid_email">Invalid email address format</string>
     <string name="invalid_password">Password must contain at least 8 characters</string>
-    <string name="interval_out_of_range">Time Interval is out of range</string>
-    <string name="spacing_too_small">Footprint separation value cannot be less than </string>
+    <string name="insufficient_api_level">This app requires Android 10 (API level 29) or higher</string>
+    <string name="insufficient_permission">Insufficient application permissions</string>
+    <string name="location_setting">Location must be turned on in Settings</string>
+    <string name="interval_too_low">Time Interval must be at least %1$d seconds</string>
+    <string name="interval_too_high">Time Interval must no more than %1$d hours</string>
+    <string name="account_missing">A known account ID is required</string>
 
     <string name="instructions_text">
         Enter email address of your service administrator to request write access to the cloud database for your email
@@ -45,8 +57,11 @@
 
     <string name="current_user">%1$s: %2$s</string>
     <string name="current_account">%1$s: %2$s</string>
-    <string name="current_spacing">%1$s: %2$d meters</string>
-    <string name="current_interval">%1$s: %2$d %3$s</string>
+    <string name="current_spacing">%1$s: %2$d m</string>
+    <string name="current_time_interval">%1$s: %2$d %3$s</string>
+    <string name="current_accuracy">%1$s: %2$s</string>
+    <string name="current_step_count">%1$s: %2$s</string>
     <string name="current_version">Version %1$s (build %2$d)</string>
+    <string name="initializing">Initializing</string>
 </resources>
 

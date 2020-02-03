@@ -9,3 +9,5 @@ local.properties
 settings.gradle
 LayTrax.iml
 app.iml
+
+/src/google-services.json
