@@ -2,6 +2,8 @@
 .gradle
 .iml
 
+.idea
+
 # Ignore Gradle build output directory
 build
 
@@ -10,4 +12,4 @@ settings.gradle
 LayTrax.iml
 app.iml
 
-/src/google-services.json
+/app/google-services.json
